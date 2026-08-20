@@ -87,30 +87,45 @@ npm run serve   # http://localhost:4173
 
 ## Live self-heal demo
 
-The demo storefront (`demo-site/`) starts on layout `v1`. To trigger a real
-self-heal on camera:
+The demo storefront (`demo-site/`) ships two layouts. Swapping between them
+triggers a real self-heal, verified end to end — and it's **repeatable in
+either direction**, not a one-off:
 
 ```bash
 cd demo-site
-./deploy.sh v2   # redesigns the page: renamed classes, restructured price/stock markup
+./deploy.sh v2   # redesign: renamed classes, price split into amount/cents/currency spans,
+                  # "in stock" moved from visible text to a data-availability attribute
 cd ..
-webmend run gearnest-demo   # scraper fails validation -> auto-heals -> re-verifies
+webmend run gearnest-demo   # fails validation -> auto-heals -> re-verifies -> 6/6 records correct
 ```
 
-`v2` isn't a trivial CSS tweak — it moves price into split amount/cents/currency
-spans and turns "in stock" from visible text into a `data-availability`
-attribute, the kind of redesign that silently breaks selector-based scrapers
-while looking fine to a human. `webmend run` catches the missing fields, writes
-a diagnosis, and calls `bdata scraper heal` to re-derive the extraction logic
-against the live page — same Collector ID throughout.
+This was run for real during development, in both directions, on the same
+Collector ID (`c_mt1gzrvq1qijtzeo67`):
 
-## Real-world target
+| Deploy | Result |
+|---|---|
+| `v2` (redesign) | scraper returned 0 records → `webmend` diagnosed it → healed → **6/6 records verified correct** |
+| `v1` (revert) | now-v2-tuned scraper broke again on the old layout → healed back → **6/6 records verified correct** |
 
-`internshala-wfh` tracks live work-from-home internship listings on
-[Internshala](https://internshala.com/internships/work-from-home-internships),
-a public listings site not among Bright Data's 800+ pre-built scrapers —
-proof the same loop holds up on a real, uncontrolled target, not just the
-demo site.
+Run `webmend heals gearnest-demo` to see the full, real heal-event log.
+
+## Real-world targets
+
+Two targets outside the demo site, neither in Bright Data's 800+ pre-built
+scraper catalog:
+
+- **`wwr-remote-jobs`** — [We Work Remotely](https://weworkremotely.com/categories/remote-programming-jobs)'s
+  programming job board. On its very first real run the fresh scraper came back
+  empty; `webmend` diagnosed it, called `bdata scraper heal`, re-verified, and
+  landed **190 real job listings** — an unstaged self-heal on a live,
+  uncontrolled site.
+- **`internshala-wfh`** — [Internshala](https://internshala.com/internships/work-from-home-internships)'s
+  work-from-home internship listings. This one didn't cooperate: the run came
+  back empty and Bright Data's own heal attempt failed server-side too. We
+  left it tracked rather than deleting it — `webmend heals internshala-wfh`
+  shows the failure plainly. A tool that only ever reports success on a target
+  it doesn't fully control isn't reliable, it's just quiet about the cases
+  that don't work.
 
 ## Rules compliance
 
