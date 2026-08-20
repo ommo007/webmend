@@ -20,6 +20,8 @@ For every tracked target it:
 Built for the ["Into the Scrape-Verse"](https://www.wemakedevs.org/hackathons/scrape-verse)
 hackathon (Web-Slinger track — Best Use of Bright Data).
 
+![webmend dashboard](docs/dashboard.png)
+
 ## Why this design
 
 Scraper Studio's self-heal isn't "automatic repair on failure" — `bdata scraper
