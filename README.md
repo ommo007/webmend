@@ -20,6 +20,11 @@ For every tracked target it:
 Built for the ["Into the Scrape-Verse"](https://www.wemakedevs.org/hackathons/scrape-verse)
 hackathon (Web-Slinger track — Best Use of Bright Data).
 
+**[▶ Watch the ~2 min demo](docs/webmend-demo.mp4)** — live layout break, real
+Bright Data self-heal, and the real-target run, narrated end to end. Every
+frame is a real screenshot or real, unedited terminal output captured during
+development; nothing shown is staged or mocked.
+
 ![webmend dashboard](docs/dashboard.png)
 
 ## Why this design
