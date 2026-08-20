@@ -34,11 +34,53 @@ function validateRecords(records, requiredFields) {
   return { ok: true };
 }
 
-function extractRecords(runResult) {
-  if (Array.isArray(runResult)) return runResult;
-  if (Array.isArray(runResult?.data)) return runResult.data;
-  if (Array.isArray(runResult?.result)) return runResult.result;
-  return [];
+function looksLikeRecord(obj, requiredFields) {
+  return (
+    obj != null &&
+    typeof obj === "object" &&
+    requiredFields.some((f) => Object.prototype.hasOwnProperty.call(obj, f))
+  );
+}
+
+/**
+ * AI-generated scrapers don't agree on a result shape: sometimes a flat
+ * array of records, sometimes one wrapper object per crawled page with the
+ * real records nested under a named array (e.g. `products`). This searches
+ * for whichever shape actually contains the fields we asked for, then
+ * de-dupes — a single-page site crawled via several discovered anchor URLs
+ * can otherwise return the same records once per URL.
+ */
+function extractRecords(runResult, requiredFields) {
+  const pages = Array.isArray(runResult)
+    ? runResult
+    : Array.isArray(runResult?.data)
+    ? runResult.data
+    : Array.isArray(runResult?.result)
+    ? runResult.result
+    : [runResult];
+
+  const records = [];
+  for (const page of pages) {
+    if (looksLikeRecord(page, requiredFields)) {
+      records.push(page);
+      continue;
+    }
+    if (page && typeof page === "object") {
+      for (const value of Object.values(page)) {
+        if (Array.isArray(value) && value.some((item) => looksLikeRecord(item, requiredFields))) {
+          records.push(...value);
+        }
+      }
+    }
+  }
+
+  const seen = new Set();
+  return records.filter((r) => {
+    const key = JSON.stringify(r);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 /**
@@ -53,7 +95,7 @@ export async function runAndHeal(target) {
   let records;
   try {
     runResult = await scraperRun(collectorId, url);
-    records = extractRecords(runResult);
+    records = extractRecords(runResult, requiredFields);
   } catch (err) {
     // A hard failure (e.g. selector throws / page structure broke badly) is
     // itself a heal trigger, using the error text as the diagnosis.
@@ -77,12 +119,19 @@ export async function runAndHeal(target) {
   return healThenVerify(target, validation.reason);
 }
 
+// Bright Data's `scraper heal` rejects prompts over 1000 chars outright.
+const HEAL_PROMPT_LIMIT = 1000;
+
 async function healThenVerify(target, reason) {
   const { name, url, collector_id: collectorId, required_fields: requiredFields, description } = target;
 
-  const prompt = `${reason} Expected each record to include: ${requiredFields.join(
+  const fullPrompt = `${reason} Expected each record to include: ${requiredFields.join(
     ", "
   )}. Original extraction goal: ${description}. Re-inspect the live page at ${url} and fix the selectors/extraction logic so these fields populate correctly again.`;
+  const prompt =
+    fullPrompt.length <= HEAL_PROMPT_LIMIT
+      ? fullPrompt
+      : `${fullPrompt.slice(0, HEAL_PROMPT_LIMIT - 1)}…`;
 
   let healResult;
   try {
@@ -104,7 +153,7 @@ async function healThenVerify(target, reason) {
   let verifyOk = false;
   try {
     const verifyRun = await scraperRun(collectorId, url);
-    verifyRecords = extractRecords(verifyRun);
+    verifyRecords = extractRecords(verifyRun, requiredFields);
     verifyOk = validateRecords(verifyRecords, requiredFields).ok;
   } catch {
     verifyOk = false;
