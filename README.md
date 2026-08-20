@@ -47,9 +47,14 @@ bright data scraper (create/run/heal)
 - `src/watchdog.js` — the validate → diagnose → heal → re-verify loop.
 - `src/cli.js` — the CLI itself (`add`, `run`, `run-all`, `watch`, `status`, `heals`, `history`).
 - `src/server.js` + `public/index.html` — read-only API/dashboard, a downstream consumer of the Collector ID data.
-- `demo-site/` — a small storefront we own and deploy to GitHub Pages
-  (https://ommo007.github.io/gearnest-demo/), with two layouts (`v1`, `v2`)
-  so we can break the page's markup on demand and show the heal loop live.
+- `demo-site/` — a small storefront we own, deployed to GitHub Pages at
+  https://ommo007.github.io/gearnest-demo/ (separate repo:
+  [gearnest-demo](https://github.com/ommo007/gearnest-demo), vendored here as
+  plain files for reference). Two layouts (`v1`, `v2`) let us break the page's
+  markup on demand and show the heal loop live. `deploy.sh` pushes to our own
+  `gearnest-demo` repo, so it isn't runnable from a clone of *this* repo —
+  the evidence trail is `webmend heals gearnest-demo` (real, timestamped) and
+  the screenshots/table below, not something you need to reproduce yourself.
 
 ## Setup
 
@@ -87,6 +92,29 @@ webmend history <name>
 npm run serve   # http://localhost:4173
 ```
 
+## Reproducing this from a fresh clone
+
+`data/webmend.db` is gitignored (it's local run state, not source), so a
+fresh clone starts with zero tracked targets. Recreate the three used in this
+submission — each `add` calls `bdata scraper create` and takes 5-10 minutes:
+
+```bash
+webmend add gearnest-demo "https://ommo007.github.io/gearnest-demo/" \
+  "Extract each product listing on this page: the product name, the price as a decimal number, the currency code, and whether it is in stock (true or false)." \
+  --fields name,price,currency,in_stock
+
+webmend add wwr-remote-jobs "https://weworkremotely.com/categories/remote-programming-jobs" \
+  "Extract each job listing: the job title, the company name, and the URL link to the job posting detail page." \
+  --fields title,company,url
+
+webmend add internshala-wfh "https://internshala.com/internships/work-from-home-internships" \
+  "Extract each internship listing card: the internship title, the company name, the monthly stipend as text, and the URL link to the internship's detail page." \
+  --fields title,company,stipend,url
+
+webmend run-all
+webmend status
+```
+
 ## Live self-heal demo
 
 The demo storefront (`demo-site/`) ships two layouts. Swapping between them
@@ -113,14 +141,18 @@ Run `webmend heals gearnest-demo` to see the full, real heal-event log.
 
 ## Real-world targets
 
-Two targets outside the demo site, neither in Bright Data's 800+ pre-built
-scraper catalog:
+Two targets outside the demo site. Both are niche/regional listing sites —
+not major consumer platforms (Amazon, LinkedIn, Instagram, Zillow, etc.) of
+the kind Bright Data's 800+ pre-built scrapers cover — chosen specifically
+because they'd need custom extraction logic, not an off-the-shelf template:
 
 - **`wwr-remote-jobs`** — [We Work Remotely](https://weworkremotely.com/categories/remote-programming-jobs)'s
   programming job board. On its very first real run the fresh scraper came back
   empty; `webmend` diagnosed it, called `bdata scraper heal`, re-verified, and
   landed **190 real job listings** — an unstaged self-heal on a live,
-  uncontrolled site.
+  uncontrolled site. Re-run afterward, it stayed OK (190 records, no heal
+  needed) — confirming this was a real one-time fix, not a scraper that needs
+  healing on every run.
 - **`internshala-wfh`** — [Internshala](https://internshala.com/internships/work-from-home-internships)'s
   work-from-home internship listings. This one didn't cooperate: the run came
   back empty and Bright Data's own heal attempt failed server-side too. We

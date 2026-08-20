@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>GearNest — Outdoor Gear Catalog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 16px; color: #1a1a1a; background: #0f172a; color: #e2e8f0; }
+  h1 { margin-bottom: 4px; }
+  .subtitle { color: #94a3b8; margin-top: 0; }
+  .item { border: 1px solid #334155; border-radius: 10px; padding: 18px; margin-bottom: 12px; background: #1e293b; }
+  .item-heading { margin: 0 0 6px 0; font-size: 1.05em; }
+  .cost { display: flex; align-items: baseline; gap: 2px; margin-bottom: 6px; }
+  .cost .currency-code { font-size: 0.75em; color: #94a3b8; margin-left: 4px; }
+  .cta a { text-decoration: none; color: #60a5fa; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<h1>GearNest</h1>
+<p class="subtitle">Outdoor gear catalog — layout v2 (redesign, schema demo webmend/wemakedevs Scrape-Verse)</p>
+
+<!-- Redesign notes: name is now inside a nested span, price is split into
+     amount/cents/currency spans, and stock is a data attribute instead of
+     visible text — the kind of change that silently breaks CSS-selector
+     scrapers while the page still looks fine to a human. -->
+
+<article class="item" id="sku-1" data-availability="true">
+  <h3 class="item-heading"><span>Trailblazer 40L Backpack</span></h3>
+  <div class="cost"><span class="amount">149</span><span class="cents">.99</span><span class="currency-code">USD</span></div>
+  <div class="cta"><a href="#sku-1">View item</a></div>
+</article>
+
+<article class="item" id="sku-2" data-availability="true">
+  <h3 class="item-heading"><span>Summit 2-Person Tent</span></h3>
+  <div class="cost"><span class="amount">229</span><span class="cents">.00</span><span class="currency-code">USD</span></div>
+  <div class="cta"><a href="#sku-2">View item</a></div>
+</article>
+
+<article class="item" id="sku-3" data-availability="false">
+  <h3 class="item-heading"><span>AlpineFlow Water Filter</span></h3>
+  <div class="cost"><span class="amount">34</span><span class="cents">.50</span><span class="currency-code">USD</span></div>
+  <div class="cta"><a href="#sku-3">View item</a></div>
+</article>
+
+<article class="item" id="sku-4" data-availability="true">
+  <h3 class="item-heading"><span>EmberCore Camp Stove</span></h3>
+  <div class="cost"><span class="amount">59</span><span class="cents">.99</span><span class="currency-code">USD</span></div>
+  <div class="cta"><a href="#sku-4">View item</a></div>
+</article>
+
+<article class="item" id="sku-5" data-availability="true">
+  <h3 class="item-heading"><span>Ridgeline Trekking Poles</span></h3>
+  <div class="cost"><span class="amount">44</span><span class="cents">.00</span><span class="currency-code">USD</span></div>
+  <div class="cta"><a href="#sku-5">View item</a></div>
+</article>
+
+<article class="item" id="sku-6" data-availability="true">
+  <h3 class="item-heading"><span>Nightfall 20°F Sleeping Bag</span></h3>
+  <div class="cost"><span class="amount">119</span><span class="cents">.95</span><span class="currency-code">USD</span></div>
+  <div class="cta"><a href="#sku-6">View item</a></div>
+</article>
+
+</body>
+</html>
